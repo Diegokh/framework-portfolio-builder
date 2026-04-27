@@ -97,4 +97,4 @@ framework-portfolio-builder/
 
 ## Autor
 
-Desarrollado por **Diego** como proyecto final del Sprint 5 — AccioSoft Dev Academy
+Desarrollado por **Diego** --- **Todos los derechos reservados**
