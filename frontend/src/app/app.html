@@ -1,0 +1,20 @@
+@if (auth.isLoggedIn()) {
+  <mat-toolbar color="primary">
+    <span class="app-title">Portfolio Builder</span>
+    <nav class="nav-links">
+      <a mat-button routerLink="/dashboard" routerLinkActive="active-link">
+        <mat-icon>dashboard</mat-icon> Dashboard
+      </a>
+      <a mat-button routerLink="/projects" routerLinkActive="active-link">
+        <mat-icon>folder</mat-icon> Proyectos
+      </a>
+    </nav>
+    <span class="spacer"></span>
+    <span class="user-name">{{ auth.currentUser()?.name }}</span>
+    <button mat-icon-button (click)="logout()" title="Cerrar sesión">
+      <mat-icon>logout</mat-icon>
+    </button>
+  </mat-toolbar>
+}
+
+<router-outlet />

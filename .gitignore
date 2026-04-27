@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Environment variables — NEVER commit these
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Angular build output
+frontend/dist/
+frontend/.angular/cache
+
+# Uploads (generated at runtime)
+backend/uploads/
+
+# Claude Code
+.claude/
+claude.md
+# OS files
+.DS_Store
+Thumbs.db

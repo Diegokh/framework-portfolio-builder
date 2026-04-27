@@ -17,6 +17,7 @@ app.get('/api/health', (req, res) => {
 // Rutas (las descomentaremos en próximas lecciones)
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/projects', require('./routes/projects.routes'));
+app.use('/api/stats', require('./routes/stats.routes'));
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));
