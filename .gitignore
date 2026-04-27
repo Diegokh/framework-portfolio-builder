@@ -15,7 +15,7 @@ frontend/dist/
 frontend/.angular/cache
 
 # Uploads (generated at runtime)
-backend/uploads/
+
 
 # Claude Code
 .claude/
