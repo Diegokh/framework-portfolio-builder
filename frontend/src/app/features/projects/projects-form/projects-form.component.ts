@@ -6,6 +6,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 import { ProjectsService } from '../../../core/services/projects.service';
 import { ProjectStatus } from '../../../core/models/project.model';
 
@@ -19,6 +21,8 @@ import { ProjectStatus } from '../../../core/models/project.model';
     MatButtonModule,
     MatSelectModule,
     MatCardModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
   ],
   template: `
     <div class="container">
@@ -64,6 +68,22 @@ import { ProjectStatus } from '../../../core/models/project.model';
               </mat-select>
             </mat-form-field>
 
+            <div class="date-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Fecha de inicio</mat-label>
+                <input matInput [matDatepicker]="startPicker" formControlName="startDate" />
+                <mat-datepicker-toggle matSuffix [for]="startPicker" />
+                <mat-datepicker #startPicker />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Fecha de finalización</mat-label>
+                <input matInput [matDatepicker]="endPicker" formControlName="endDate" />
+                <mat-datepicker-toggle matSuffix [for]="endPicker" />
+                <mat-datepicker #endPicker />
+              </mat-form-field>
+            </div>
+
             <div class="actions">
               <button mat-button type="button" (click)="cancel()">Cancelar</button>
               <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
@@ -85,6 +105,11 @@ import { ProjectStatus } from '../../../core/models/project.model';
       width: 100%;
       margin-top: 12px;
     }
+    .date-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
     .actions {
       display: flex;
       justify-content: flex-end;
@@ -105,6 +130,8 @@ export class ProjectFormComponent implements OnInit {
     repoUrl: [''],
     liveUrl: [''],
     status: ['in_progress' as ProjectStatus],
+    startDate: [''],
+    endDate: [''],
   });
 
   isEdit = false;
@@ -115,18 +142,20 @@ export class ProjectFormComponent implements OnInit {
     if (paramId) {
       this.isEdit = true;
       this.id = +paramId;
-      this.service.getById(this.id).subscribe(res => this.form.patchValue(res.data));
+      this.service.getById(this.id).subscribe(res =>
+        this.form.patchValue({ ...res.data, endDate: res.data.endDate ?? '' })
+      );
     }
   }
 
   submit() {
     if (this.isEdit && this.id) {
       this.service.update(this.id, this.form.value).subscribe(() =>
-        this.router.navigate(['/projects'])
+        this.router.navigate(['/projects', this.id, 'detail'])
       );
     } else {
-      this.service.create(this.form.value).subscribe(() =>
-        this.router.navigate(['/projects'])
+      this.service.create(this.form.value).subscribe(res =>
+        this.router.navigate(['/projects', res.id, 'detail'])
       );
     }
   }

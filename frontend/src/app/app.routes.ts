@@ -37,5 +37,17 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/projects/projects-form/projects-form.component').then(m => m.ProjectFormComponent),
   },
+  {
+    path: 'projects/:id/detail',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/projects/project-detail/project-detail.component').then(m => m.ProjectDetailComponent),
+  },
+  {
+    path: 'profile',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/profile/profile.component').then(m => m.ProfileComponent),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];

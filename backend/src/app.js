@@ -5,7 +5,7 @@ const helmet = require('helmet');
 
 const app = express();
 
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({ origin: process.env.FRONTEND_URL }));
 app.use(express.json());
 
@@ -17,7 +17,11 @@ app.get('/api/health', (req, res) => {
 // Rutas (las descomentaremos en próximas lecciones)
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/projects', require('./routes/projects.routes'));
+app.use('/api/projects/:projectId/technologies', require('./routes/technologies.routes'));
+app.use('/api/projects/:projectId/screenshots', require('./routes/screenshots.routes'));
 app.use('/api/stats', require('./routes/stats.routes'));
+app.use('/api/profile', require('./routes/profile.routes'));
+app.use('/uploads', express.static(require('path').join(__dirname, '../uploads')));
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));
