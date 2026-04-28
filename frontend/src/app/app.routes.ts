@@ -49,5 +49,41 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/profile/profile.component').then(m => m.ProfileComponent),
   },
+  {
+    path: 'categories',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/categories/categories.component').then(m => m.CategoriesComponent),
+  },
+  {
+    path: 'links',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/links/links.component').then(m => m.LinksComponent),
+  },
+  {
+    path: 'captures',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/captures/captures.component').then(m => m.CapturesComponent),
+  },
+  {
+    path: 'skills',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/skills/skills.component').then(m => m.SkillsComponent),
+  },
+  {
+    path: 'contact',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/contact/contact.component').then(m => m.ContactComponent),
+  },
+  {
+    path: 'settings',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/settings/settings.component').then(m => m.SettingsComponent),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];

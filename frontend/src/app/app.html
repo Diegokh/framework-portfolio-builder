@@ -1,23 +1,125 @@
-@if (auth.isLoggedIn()) {
-  <mat-toolbar color="primary">
-    <span class="app-title">Portfolio Builder</span>
-    <nav class="nav-links">
-      <a mat-button routerLink="/dashboard" routerLinkActive="active-link">
-        <mat-icon>dashboard</mat-icon> Dashboard
-      </a>
-      <a mat-button routerLink="/projects" routerLinkActive="active-link">
-        <mat-icon>folder</mat-icon> Proyectos
-      </a>
-      <a mat-button routerLink="/profile" routerLinkActive="active-link">
-        <mat-icon>person</mat-icon> Perfil
-      </a>
-    </nav>
-    <span class="spacer"></span>
-    <span class="user-name">{{ auth.currentUser()?.name }}</span>
-    <button mat-icon-button (click)="logout()" title="Cerrar sesión">
-      <mat-icon>logout</mat-icon>
-    </button>
-  </mat-toolbar>
-}
+@if (!auth.isLoggedIn()) {
+  <router-outlet />
+} @else {
+  <div class="flex flex-col h-screen bg-[var(--app-bg)] text-[var(--app-text-primary)] overflow-hidden">
 
-<router-outlet />
+    <!-- Top Header -->
+    <header class="h-14 bg-[var(--app-surface)] border-b border-[var(--app-border)] flex items-center px-6 shrink-0 z-10">
+      <div class="flex items-center gap-2 w-52 shrink-0">
+        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shrink-0"></span>
+        <span class="font-bold text-[var(--app-text-primary)] text-sm">Portfolio Builder</span>
+      </div>
+
+      <nav class="flex gap-0.5">
+        <a routerLink="/projects"
+           routerLinkActive="bg-[var(--app-hover)] text-[var(--app-text-primary)]"
+           class="px-3 py-1.5 rounded-md text-[var(--app-text-muted)] hover:text-[var(--app-text-primary)] hover:bg-[var(--app-hover)] transition-colors text-sm">
+          Proyectos
+        </a>
+        <a routerLink="/skills"
+           routerLinkActive="bg-[var(--app-hover)] text-[var(--app-text-primary)]"
+           class="px-3 py-1.5 rounded-md text-[var(--app-text-muted)] hover:text-[var(--app-text-primary)] hover:bg-[var(--app-hover)] transition-colors text-sm">
+          Habilidades
+        </a>
+        <a routerLink="/contact"
+           routerLinkActive="bg-[var(--app-hover)] text-[var(--app-text-primary)]"
+           class="px-3 py-1.5 rounded-md text-[var(--app-text-muted)] hover:text-[var(--app-text-primary)] hover:bg-[var(--app-hover)] transition-colors text-sm">
+          Contacto
+        </a>
+        <a routerLink="/profile"
+           routerLinkActive="bg-[var(--app-hover)] text-[var(--app-text-primary)]"
+           class="px-3 py-1.5 rounded-md text-[var(--app-text-muted)] hover:text-[var(--app-text-primary)] hover:bg-[var(--app-hover)] transition-colors text-sm">
+          Perfil
+        </a>
+      </nav>
+
+      <div class="flex items-center gap-2.5 ml-auto">
+        <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[var(--app-border)] text-[var(--app-text-muted)] text-sm hover:border-[var(--app-accent)] hover:text-[var(--app-accent)] transition-colors">
+          <mat-icon style="font-size:15px;width:15px;height:15px;line-height:15px">visibility</mat-icon>
+          Vista pública
+        </button>
+        <a routerLink="/projects/new"
+           class="flex items-center gap-1 px-3 py-1.5 rounded-md bg-cyan-500 text-white text-sm font-medium hover:bg-cyan-400 transition-colors no-underline">
+          <mat-icon style="font-size:15px;width:15px;height:15px;line-height:15px">add</mat-icon>
+          Añadir proyecto
+        </a>
+        <a routerLink="/profile"
+           class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold text-sm cursor-pointer select-none no-underline"
+           title="{{ auth.currentUser()?.name }}">
+          {{ auth.currentUser()?.name?.[0]?.toUpperCase() ?? '?' }}
+        </a>
+      </div>
+    </header>
+
+    <!-- Body: sidebar + content -->
+    <div class="flex flex-1 overflow-hidden">
+
+      <!-- Sidebar -->
+      <aside class="w-52 bg-[var(--app-surface)] border-r border-[var(--app-border)] flex flex-col shrink-0">
+        <nav class="flex-1 py-3 px-2 flex flex-col gap-0.5">
+          <a routerLink="/projects"
+             routerLinkActive="bg-[var(--app-accent-soft)] text-[var(--app-accent)]"
+             class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text-primary)] hover:bg-[var(--app-hover)] transition-colors text-sm font-medium">
+            <mat-icon class="text-lg shrink-0">folder</mat-icon>
+            Proyectos
+          </a>
+          <a routerLink="/categories"
+             routerLinkActive="bg-[var(--app-accent-soft)] text-[var(--app-accent)]"
+             class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text-primary)] hover:bg-[var(--app-hover)] transition-colors text-sm font-medium">
+            <mat-icon class="text-lg shrink-0">label</mat-icon>
+            Categorías
+          </a>
+          <a routerLink="/captures"
+             routerLinkActive="bg-[var(--app-accent-soft)] text-[var(--app-accent)]"
+             class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text-primary)] hover:bg-[var(--app-hover)] transition-colors text-sm font-medium">
+            <mat-icon class="text-lg shrink-0">photo_camera</mat-icon>
+            Capturas
+          </a>
+          <a routerLink="/links"
+             routerLinkActive="bg-[var(--app-accent-soft)] text-[var(--app-accent)]"
+             class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text-primary)] hover:bg-[var(--app-hover)] transition-colors text-sm font-medium">
+            <mat-icon class="text-lg shrink-0">link</mat-icon>
+            Links
+          </a>
+          <a routerLink="/skills"
+             routerLinkActive="bg-[var(--app-accent-soft)] text-[var(--app-accent)]"
+             class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text-primary)] hover:bg-[var(--app-hover)] transition-colors text-sm font-medium">
+            <mat-icon class="text-lg shrink-0">psychology</mat-icon>
+            Habilidades
+          </a>
+          <a routerLink="/contact"
+             routerLinkActive="bg-[var(--app-accent-soft)] text-[var(--app-accent)]"
+             class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text-primary)] hover:bg-[var(--app-hover)] transition-colors text-sm font-medium">
+            <mat-icon class="text-lg shrink-0">mail</mat-icon>
+            Contacto
+          </a>
+          <a routerLink="/profile"
+             routerLinkActive="bg-[var(--app-accent-soft)] text-[var(--app-accent)]"
+             class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text-primary)] hover:bg-[var(--app-hover)] transition-colors text-sm font-medium">
+            <mat-icon class="text-lg shrink-0">person</mat-icon>
+            Perfil
+          </a>
+          <a routerLink="/settings"
+             routerLinkActive="bg-[var(--app-accent-soft)] text-[var(--app-accent)]"
+             class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text-primary)] hover:bg-[var(--app-hover)] transition-colors text-sm font-medium">
+            <mat-icon class="text-lg shrink-0">settings</mat-icon>
+            Ajustes
+          </a>
+        </nav>
+
+        <div class="p-2 border-t border-[var(--app-border)]">
+          <button (click)="logout()"
+                  class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text-primary)] hover:bg-[var(--app-hover)] transition-colors text-sm w-full">
+            <mat-icon class="text-lg shrink-0">logout</mat-icon>
+            Cerrar sesión
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main content -->
+      <main class="flex-1 overflow-auto bg-[var(--app-bg)]">
+        <router-outlet />
+      </main>
+    </div>
+  </div>
+}

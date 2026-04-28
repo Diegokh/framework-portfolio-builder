@@ -10,6 +10,14 @@ export interface Project {
   status: ProjectStatus;
   startDate: string;
   endDate: string | null;
+  coverStyle: string | null;
+  coverIcon: string | null;
+  categoryId: number | null;
+  categoryName: string | null;
+  categoryColor: string | null;
+  visits: number;
+  contacts: number;
+  technologiesCount: number;
 }
 
 export interface ProjectsResponse {

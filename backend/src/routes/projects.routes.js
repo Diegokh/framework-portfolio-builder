@@ -7,7 +7,14 @@ const authMiddleware = require('../middleware/auth.middleware');
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      'SELECT * FROM projects WHERE userId = ? ORDER BY createdAt DESC',
+      `SELECT p.*, c.name AS categoryName, c.color AS categoryColor,
+              COUNT(DISTINCT pt.id) AS technologiesCount
+       FROM projects p
+       LEFT JOIN categories c ON c.id = p.categoryId
+       LEFT JOIN project_technologies pt ON pt.projectId = p.id
+       WHERE p.userId = ?
+       GROUP BY p.id
+       ORDER BY p.createdAt DESC`,
       [req.user.id]
     );
     res.json({ success: true, data: rows });
@@ -20,7 +27,13 @@ router.get('/', authMiddleware, async (req, res) => {
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      'SELECT * FROM projects WHERE id = ? AND userId = ?',
+      `SELECT p.*, c.name AS categoryName, c.color AS categoryColor,
+              COUNT(DISTINCT pt.id) AS technologiesCount
+       FROM projects p
+       LEFT JOIN categories c ON c.id = p.categoryId
+       LEFT JOIN project_technologies pt ON pt.projectId = p.id
+       WHERE p.id = ? AND p.userId = ?
+       GROUP BY p.id`,
       [req.params.id, req.user.id]
     );
     if (rows.length === 0) {
@@ -67,7 +80,7 @@ router.post('/', authMiddleware, async (req, res) => {
 // PUT /api/projects/:id — Actualizar un proyecto
 router.put('/:id', authMiddleware, async (req, res) => {
   try {
-    const { name, description, repoUrl, liveUrl, status, startDate, endDate } = req.body;
+    const { name, description, repoUrl, liveUrl, status, startDate, endDate, categoryId } = req.body;
 
     if (!name || name.trim() === '') {
       return res.status(400).json({ success: false, message: 'El nombre es obligatorio' });
@@ -76,7 +89,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
     const [result] = await pool.execute(
       `UPDATE projects
          SET name = ?, description = ?, repoUrl = ?, liveUrl = ?,
-             status = ?, startDate = ?, endDate = ?
+             status = ?, startDate = ?, endDate = ?, categoryId = ?
        WHERE id = ? AND userId = ?`,
       [
         name,
@@ -86,8 +99,9 @@ router.put('/:id', authMiddleware, async (req, res) => {
         status ?? 'in_progress',
         startDate ?? null,
         endDate ?? null,
+        categoryId ?? null,
         req.params.id,
-        req.user.id,                       // asegura que solo modifica los suyos
+        req.user.id,
       ]
     );
 
@@ -96,6 +110,27 @@ router.put('/:id', authMiddleware, async (req, res) => {
     }
 
     res.json({ success: true, message: 'Actualizado correctamente' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// PATCH /api/projects/:id/cover — Cambiar portada e icono
+router.patch('/:id/cover', authMiddleware, async (req, res) => {
+  try {
+    const fields = [];
+    const values = [];
+    if ('coverStyle' in req.body) { fields.push('coverStyle = ?'); values.push(req.body.coverStyle ?? null); }
+    if ('coverIcon'  in req.body) { fields.push('coverIcon = ?');  values.push(req.body.coverIcon  ?? null); }
+    if (fields.length === 0)
+      return res.status(400).json({ success: false, message: 'Nada que actualizar' });
+    values.push(req.params.id, req.user.id);
+    const [result] = await pool.execute(
+      `UPDATE projects SET ${fields.join(', ')} WHERE id = ? AND userId = ?`, values
+    );
+    if (result.affectedRows === 0)
+      return res.status(404).json({ success: false, message: 'Proyecto no encontrado' });
+    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

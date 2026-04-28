@@ -111,6 +111,32 @@ router.post('/login', validateLogin, async (req, res) => {
   }
 });
 
+// ---------- POST /api/auth/change-password ----------
+router.post('/change-password', authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword)
+      return res.status(400).json({ success: false, message: 'Todos los campos son obligatorios' });
+    if (newPassword.length < 6)
+      return res.status(400).json({ success: false, message: 'La nueva contraseña debe tener al menos 6 caracteres' });
+
+    const [users] = await pool.execute('SELECT password FROM users WHERE id = ?', [req.user.id]);
+    if (users.length === 0)
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+
+    const isValid = await bcrypt.compare(currentPassword, users[0].password);
+    if (!isValid)
+      return res.status(401).json({ success: false, message: 'La contraseña actual es incorrecta' });
+
+    const hashed = await bcrypt.hash(newPassword, 12);
+    await pool.execute('UPDATE users SET password = ? WHERE id = ?', [hashed, req.user.id]);
+
+    res.json({ success: true, message: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // ---------- GET /api/auth/me ----------
 router.get('/me', authMiddleware, async (req, res) => {
   try {

@@ -38,7 +38,7 @@ cd framework-portfolio-builder
 ```bash
 cd backend
 npm install
-cp .env.example .env   # Edita con tus credenciales de base de datos
+cp .env.example .env   
 npm run dev
 ```
 
@@ -57,7 +57,7 @@ La app estará disponible en `http://localhost:4200`
 ### Variables de entorno (`backend/.env`)
 
 ```env
-PORT=3001
+PORT=3010
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=
@@ -72,14 +72,14 @@ FRONTEND_URL=http://localhost:4200
 framework-portfolio-builder/
 ├── backend/
 │   └── src/
-│       ├── routes/       → endpoints de la API
-│       ├── middleware/   → autenticación JWT
-│       └── db/           → conexión MySQL
+│       ├── routes/       
+│       ├── middleware/   
+│       └── db/           
 ├── frontend/
 │   └── src/app/
-│       ├── core/         → auth, servicios, modelos
-│       ├── features/     → dashboard, proyectos, auth
-│       └── shared/       → componentes reutilizables
+│       ├── core/         
+│       ├── features/    
+│       └── shared/       
 └── README.md
 ```
 

@@ -19,8 +19,14 @@ app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/projects', require('./routes/projects.routes'));
 app.use('/api/projects/:projectId/technologies', require('./routes/technologies.routes'));
 app.use('/api/projects/:projectId/screenshots', require('./routes/screenshots.routes'));
+app.use('/api/screenshots', require('./routes/screenshots-all.routes'));
 app.use('/api/stats', require('./routes/stats.routes'));
 app.use('/api/profile', require('./routes/profile.routes'));
+app.use('/api/skills', require('./routes/skills.routes'));
+app.use('/api/categories', require('./routes/categories.routes'));
+app.use('/api/links', require('./routes/links.routes'));
+app.use('/api/contact', require('./routes/contact.routes'));
+app.use('/api/export', require('./routes/export.routes'));
 app.use('/uploads', express.static(require('path').join(__dirname, '../uploads')));
 
 const PORT = process.env.PORT || 3001;

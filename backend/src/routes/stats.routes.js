@@ -23,9 +23,19 @@ router.get('/', authMiddleware, async (req, res) => {
       [userId]
     );
 
+    const [[{ skillsCount }]] = await pool.execute(
+      'SELECT COUNT(*) AS skillsCount FROM skills WHERE userId = ?',
+      [userId]
+    );
+
+    const [[{ unreadMessages }]] = await pool.execute(
+      'SELECT COUNT(*) AS unreadMessages FROM messages WHERE userId = ? AND isRead = 0',
+      [userId]
+    );
+
     res.json({
       success: true,
-      data: { total, byStatus, recent },
+      data: { total, byStatus, recent, skillsCount, unreadMessages },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

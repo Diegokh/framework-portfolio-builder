@@ -29,6 +29,10 @@ export class ProjectsService {
     return this.http.put<ProjectResponse>(`${this.apiUrl}/${id}`, data);
   }
 
+  updateCover(id: number, options: { coverStyle?: string | null; coverIcon?: string | null }) {
+    return this.http.patch<{ success: boolean }>(`${this.apiUrl}/${id}/cover`, options);
+  }
+
   delete(id: number) {
     return this.http.delete<{ success: boolean }>(`${this.apiUrl}/${id}`);
   }

@@ -37,6 +37,13 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
+  changePassword(currentPassword: string, newPassword: string) {
+    return this.http.post<{ success: boolean; message: string }>(
+      `${this.apiUrl}/auth/change-password`,
+      { currentPassword, newPassword }
+    );
+  }
+
   isLoggedIn(): boolean {
     return !!localStorage.getItem('token');
   }

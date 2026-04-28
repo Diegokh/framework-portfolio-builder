@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { ReactiveFormsModule, NonNullableFormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,7 +9,9 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ProjectsService } from '../../../core/services/projects.service';
+import { CategoriesService } from '../../../core/services/categories.service';
 import { ProjectStatus } from '../../../core/models/project.model';
+import { Category } from '../../../core/models/category.model';
 
 @Component({
   selector: 'app-project-form',
@@ -68,6 +70,16 @@ import { ProjectStatus } from '../../../core/models/project.model';
               </mat-select>
             </mat-form-field>
 
+            <mat-form-field appearance="outline">
+              <mat-label>Categoría</mat-label>
+              <mat-select formControlName="categoryId">
+                <mat-option [value]="null">Sin categoría</mat-option>
+                @for (cat of categories(); track cat.id) {
+                  <mat-option [value]="cat.id">{{ cat.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
             <div class="date-row">
               <mat-form-field appearance="outline">
                 <mat-label>Fecha de inicio</mat-label>
@@ -121,8 +133,11 @@ import { ProjectStatus } from '../../../core/models/project.model';
 export class ProjectFormComponent implements OnInit {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly service = inject(ProjectsService);
+  private readonly categoriesService = inject(CategoriesService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+
+  categories = signal<Category[]>([]);
 
   form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
@@ -132,32 +147,70 @@ export class ProjectFormComponent implements OnInit {
     status: ['in_progress' as ProjectStatus],
     startDate: [''],
     endDate: [''],
+    categoryId: [null as number | null],
   });
 
   isEdit = false;
   private id?: number;
 
   ngOnInit() {
+    this.categoriesService.getAll().subscribe(res => this.categories.set(res.data));
+
     const paramId = this.route.snapshot.params['id'];
     if (paramId) {
       this.isEdit = true;
       this.id = +paramId;
-      this.service.getById(this.id).subscribe(res =>
-        this.form.patchValue({ ...res.data, endDate: res.data.endDate ?? '' })
-      );
+      this.service.getById(this.id).subscribe(res => {
+        const { name, description, repoUrl, liveUrl, status, startDate, endDate, categoryId } = res.data;
+        this.form.patchValue({
+          name,
+          description,
+          repoUrl,
+          liveUrl,
+          status,
+          startDate: startDate || '',
+          endDate: endDate || '',
+          categoryId: categoryId ?? null
+        });
+      });
     }
   }
 
   submit() {
+    const formValue = this.form.value;
+    
+    // Convertir fechas a formato ISO string si son objetos Date
+    const payload = {
+      ...formValue,
+      startDate: this.formatDateForSubmit(formValue.startDate),
+      endDate: this.formatDateForSubmit(formValue.endDate),
+    };
+
     if (this.isEdit && this.id) {
-      this.service.update(this.id, this.form.value).subscribe(() =>
+      this.service.update(this.id, payload).subscribe(() =>
         this.router.navigate(['/projects', this.id, 'detail'])
       );
     } else {
-      this.service.create(this.form.value).subscribe(res =>
+      this.service.create(payload).subscribe(res =>
         this.router.navigate(['/projects', res.id, 'detail'])
       );
     }
+  }
+
+  private formatDateForSubmit(date: any): string | undefined {
+    if (!date) return undefined;
+    
+    // Si es un objeto Date, convertir a ISO (YYYY-MM-DD)
+    if (date instanceof Date) {
+      return date.toISOString().split('T')[0];
+    }
+    
+    // Si ya es un string, devolverlo tal cual
+    if (typeof date === 'string') {
+      return date || undefined;
+    }
+    
+    return undefined;
   }
 
   cancel() {

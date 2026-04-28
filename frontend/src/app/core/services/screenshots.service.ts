@@ -8,6 +8,10 @@ export class ScreenshotsService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = environment.apiUrl;
 
+  getAllForUser() {
+    return this.http.get<ScreenshotsResponse>(`${this.apiUrl}/screenshots`);
+  }
+
   getAll(projectId: number) {
     return this.http.get<ScreenshotsResponse>(`${this.apiUrl}/projects/${projectId}/screenshots`);
   }

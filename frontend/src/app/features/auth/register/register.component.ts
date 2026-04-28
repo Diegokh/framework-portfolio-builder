@@ -81,7 +81,7 @@ import { AuthService } from '../../../core/auth/auth.service';
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      background: #f5f5f5;
+      background: var(--app-bg);
     }
     .auth-card {
       width: 100%;
@@ -99,7 +99,7 @@ import { AuthService } from '../../../core/auth/auth.service';
       margin-top: 8px;
     }
     .error-msg {
-      color: #f44336;
+      color: #dc2626;
       font-size: 0.875rem;
       margin: 4px 0;
     }
