@@ -6,7 +6,26 @@ const helmet = require('helmet');
 const app = express();
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use(cors({ origin: process.env.FRONTEND_URL }));
+const allowedOrigins = new Set(
+  [process.env.FRONTEND_URL].filter(Boolean)
+);
+
+const localhostPattern = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+
+app.use(cors({
+  origin(origin, callback) {
+    // Permite herramientas sin origin (curl, health checks, same-origin server calls)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.has(origin) || localhostPattern.test(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Origen no permitido por CORS: ${origin}`));
+  },
+}));
 app.use(express.json());
 
 // Ruta de prueba
