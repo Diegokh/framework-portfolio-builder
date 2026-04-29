@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install --include=dev",
-  "buildCommand": "ng build",
-  "outputDirectory": "dist/framework-portfolio-builder/browser"
+  "installCommand": "cd frontend && npm install --include=dev",
+  "buildCommand": "cd frontend && ng build",
+  "outputDirectory": "frontend/dist/framework-portfolio-builder/browser"
 }
