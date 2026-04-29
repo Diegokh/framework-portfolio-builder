@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:3001/api',
+  apiUrl: 'https://protective-growth-production-e6a9.up.railway.app/api',
 };
