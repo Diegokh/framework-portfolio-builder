@@ -35,11 +35,13 @@ app.get('/api/health', (req, res) => {
 
 // Rutas (las descomentaremos en próximas lecciones)
 app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/users', require('./routes/users.routes'));
 app.use('/api/projects', require('./routes/projects.routes'));
 app.use('/api/projects/:projectId/technologies', require('./routes/technologies.routes'));
 app.use('/api/projects/:projectId/screenshots', require('./routes/screenshots.routes'));
 app.use('/api/screenshots', require('./routes/screenshots-all.routes'));
 app.use('/api/stats', require('./routes/stats.routes'));
+app.use('/api/profiles', require('./routes/profile.routes'));
 app.use('/api/profile', require('./routes/profile.routes'));
 app.use('/api/skills', require('./routes/skills.routes'));
 app.use('/api/categories', require('./routes/categories.routes'));

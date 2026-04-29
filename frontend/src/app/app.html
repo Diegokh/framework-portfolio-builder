@@ -34,7 +34,12 @@
       </nav>
 
       <div class="flex items-center gap-2.5 ml-auto">
-        <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[var(--app-border)] text-[var(--app-text-muted)] text-sm hover:border-[var(--app-accent)] hover:text-[var(--app-accent)] transition-colors">
+        <a routerLink="/users"
+           class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[var(--app-border)] text-[var(--app-text-muted)] text-sm hover:border-[var(--app-accent)] hover:text-[var(--app-accent)] transition-colors no-underline">
+          <mat-icon style="font-size:15px;width:15px;height:15px;line-height:15px">group</mat-icon>
+          Buscar usuarios
+        </a>
+        <button (click)="openPublicView()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[var(--app-border)] text-[var(--app-text-muted)] text-sm hover:border-[var(--app-accent)] hover:text-[var(--app-accent)] transition-colors">
           <mat-icon style="font-size:15px;width:15px;height:15px;line-height:15px">visibility</mat-icon>
           Vista pública
         </button>

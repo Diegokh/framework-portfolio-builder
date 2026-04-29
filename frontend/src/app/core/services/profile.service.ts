@@ -12,7 +12,21 @@ export class ProfileService {
     return this.http.get<ProfileResponse>(this.apiUrl);
   }
 
+  getPublic(userId: number) {
+    return this.http.get<ProfileResponse>(`${environment.apiUrl}/profiles/public/${userId}`);
+  }
+
   update(data: Partial<Profile>) {
     return this.http.put<{ success: boolean; message: string }>(this.apiUrl, data);
+  }
+
+  uploadCv(file: File) {
+    const form = new FormData();
+    form.append('cv', file);
+    return this.http.post<{ success: boolean; cvUrl: string }>(`${this.apiUrl}/cv`, form);
+  }
+
+  deleteCv() {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.apiUrl}/cv`);
   }
 }

@@ -3,6 +3,24 @@ const router = express.Router();
 const pool = require('../db/connection');
 const authMiddleware = require('../middleware/auth.middleware');
 
+// GET /api/links/public/:userId — Links públicos de un usuario (sin auth)
+router.get('/public/:userId', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      `SELECT l.id, l.title, l.url, l.type, l.projectId, l.previewTitle, l.previewDescription, l.previewImage,
+              p.name AS projectName
+       FROM links l
+       LEFT JOIN projects p ON p.id = l.projectId
+       WHERE l.userId = ? AND l.isPublic = 1
+       ORDER BY l.createdAt DESC`,
+      [req.params.userId]
+    );
+    res.json({ success: true, data: rows });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // GET /api/links/preview?url=...
 router.get('/preview', authMiddleware, async (req, res) => {
   const { url } = req.query;
@@ -56,16 +74,16 @@ router.get('/', authMiddleware, async (req, res) => {
 // POST /api/links
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { title, url, type, projectId, previewTitle, previewDescription, previewImage } = req.body;
+    const { title, url, type, projectId, previewTitle, previewDescription, previewImage, isPublic } = req.body;
     if (!title || !title.trim())
       return res.status(400).json({ success: false, message: 'El título es obligatorio' });
     if (!url || !url.trim())
       return res.status(400).json({ success: false, message: 'La URL es obligatoria' });
 
     const [result] = await pool.execute(
-      'INSERT INTO links (userId, projectId, title, url, type, previewTitle, previewDescription, previewImage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO links (userId, projectId, title, url, type, previewTitle, previewDescription, previewImage, isPublic) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [req.user.id, projectId || null, title.trim(), url.trim(), type || 'other',
-       previewTitle || null, previewDescription || null, previewImage || null]
+       previewTitle || null, previewDescription || null, previewImage || null, isPublic ? 1 : 0]
     );
     res.status(201).json({ success: true, id: result.insertId });
   } catch (error) {
@@ -76,17 +94,17 @@ router.post('/', authMiddleware, async (req, res) => {
 // PUT /api/links/:id
 router.put('/:id', authMiddleware, async (req, res) => {
   try {
-    const { title, url, type, projectId, previewTitle, previewDescription, previewImage } = req.body;
+    const { title, url, type, projectId, previewTitle, previewDescription, previewImage, isPublic } = req.body;
     if (!title || !title.trim())
       return res.status(400).json({ success: false, message: 'El título es obligatorio' });
     if (!url || !url.trim())
       return res.status(400).json({ success: false, message: 'La URL es obligatoria' });
 
     const [result] = await pool.execute(
-      'UPDATE links SET title = ?, url = ?, type = ?, projectId = ?, previewTitle = ?, previewDescription = ?, previewImage = ? WHERE id = ? AND userId = ?',
+      'UPDATE links SET title = ?, url = ?, type = ?, projectId = ?, previewTitle = ?, previewDescription = ?, previewImage = ?, isPublic = ? WHERE id = ? AND userId = ?',
       [title.trim(), url.trim(), type || 'other', projectId || null,
        previewTitle || null, previewDescription || null, previewImage || null,
-       req.params.id, req.user.id]
+       isPublic ? 1 : 0, req.params.id, req.user.id]
     );
     if (result.affectedRows === 0)
       return res.status(404).json({ success: false, message: 'Link no encontrado' });

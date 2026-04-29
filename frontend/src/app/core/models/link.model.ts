@@ -8,6 +8,7 @@ export interface Link {
   title: string;
   url: string;
   type: LinkType;
+  isPublic: boolean;
   previewTitle: string | null;
   previewDescription: string | null;
   previewImage: string | null;

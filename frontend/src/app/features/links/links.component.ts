@@ -88,6 +88,10 @@ const LINK_TYPES: LinkType[] = ['repo', 'demo', 'article', 'video', 'docs', 'cer
                       <option [ngValue]="p.id">{{ p.name }}</option>
                     }
                   </select>
+                  <label class="flex items-center gap-1.5 cursor-pointer text-xs text-[var(--app-text-muted)] whitespace-nowrap">
+                    <input type="checkbox" formControlName="isPublic" class="accent-cyan-500 w-3.5 h-3.5" />
+                    Perfil público
+                  </label>
                   <div class="flex gap-2">
                     <button type="submit" [disabled]="editForm.invalid"
                             class="px-3 py-1.5 rounded-lg bg-cyan-500 text-white text-xs font-medium hover:bg-cyan-400 disabled:opacity-40 transition-colors">
@@ -137,6 +141,12 @@ const LINK_TYPES: LinkType[] = ['repo', 'demo', 'article', 'video', 'docs', 'cer
                         <span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-[var(--app-hover)] border border-[var(--app-border)] {{ typeMeta(link.type).color }}">
                           {{ typeMeta(link.type).label }}
                         </span>
+                        @if (link.isPublic) {
+                          <span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center gap-1">
+                            <mat-icon style="font-size:11px;width:11px;height:11px;line-height:11px">public</mat-icon>
+                            Público
+                          </span>
+                        }
                         <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button (click)="startEdit(link)"
                                   class="p-1.5 rounded-lg hover:bg-[var(--app-hover)] text-[var(--app-text-subtle)] hover:text-[var(--app-text-primary)] transition-colors">
@@ -172,6 +182,12 @@ const LINK_TYPES: LinkType[] = ['repo', 'demo', 'article', 'video', 'docs', 'cer
                       <span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-[var(--app-hover)] border border-[var(--app-border)] {{ typeMeta(link.type).color }}">
                         {{ typeMeta(link.type).label }}
                       </span>
+                      @if (link.isPublic) {
+                        <span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center gap-1">
+                          <mat-icon style="font-size:11px;width:11px;height:11px;line-height:11px">public</mat-icon>
+                          Público
+                        </span>
+                      }
                       <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button (click)="startEdit(link)"
                                 class="p-1.5 rounded-lg hover:bg-[var(--app-hover)] text-[var(--app-text-subtle)] hover:text-[var(--app-text-primary)] transition-colors">
@@ -271,6 +287,15 @@ const LINK_TYPES: LinkType[] = ['repo', 'demo', 'article', 'video', 'docs', 'cer
             </select>
           </div>
 
+          <!-- Publicar en perfil público -->
+          <label class="flex items-center gap-2 cursor-pointer select-none p-3 rounded-lg border border-[var(--app-border)] hover:border-[var(--app-accent)] transition-colors">
+            <input type="checkbox" formControlName="isPublic" class="accent-cyan-500 w-4 h-4 flex-shrink-0" />
+            <div>
+              <span class="text-sm font-medium text-[var(--app-text-primary)]">Mostrar en perfil público</span>
+              <p class="text-xs text-[var(--app-text-muted)] mt-0.5">Este link será visible para cualquier visitante de tu perfil</p>
+            </div>
+          </label>
+
           @if (error()) {
             <p class="text-xs text-red-400">{{ error() }}</p>
           }
@@ -327,6 +352,7 @@ export class LinksComponent implements OnInit {
     url: ['', Validators.required],
     type: ['other' as LinkType],
     projectId: [null as number | null],
+    isPublic: [false],
   });
 
   editForm = this.fb.group({
@@ -334,6 +360,7 @@ export class LinksComponent implements OnInit {
     url: ['', Validators.required],
     type: ['other' as LinkType],
     projectId: [null as number | null],
+    isPublic: [false],
   });
 
   ngOnInit() {
@@ -359,11 +386,12 @@ export class LinksComponent implements OnInit {
   clearPreview() { this.preview.set(null); }
 
   submit() {
-    const { title, url, type, projectId } = this.form.value;
+    const { title, url, type, projectId, isPublic } = this.form.value;
     const p = this.preview();
     this.error.set(null);
     this.service.create({
       title: title!, url: url!, type: type as LinkType, projectId: projectId ?? null,
+      isPublic: isPublic ?? false,
       previewTitle: p?.title ?? null,
       previewDescription: p?.description ?? null,
       previewImage: p?.image ?? null,
@@ -374,12 +402,13 @@ export class LinksComponent implements OnInit {
           id: res.id, userId: 0,
           projectId: projectId ?? null, projectName: project?.name ?? null,
           title: title!, url: url!, type: type as LinkType,
+          isPublic: isPublic ?? false,
           previewTitle: p?.title ?? null,
           previewDescription: p?.description ?? null,
           previewImage: p?.image ?? null,
           createdAt: new Date().toISOString(),
         }, ...list]);
-        this.form.reset({ title: '', url: '', type: 'other', projectId: null });
+        this.form.reset({ title: '', url: '', type: 'other', projectId: null, isPublic: false });
         this.preview.set(null);
         this.showForm.set(false);
       },
@@ -389,16 +418,17 @@ export class LinksComponent implements OnInit {
 
   startEdit(link: Link) {
     this.editingId.set(link.id);
-    this.editForm.setValue({ title: link.title, url: link.url, type: link.type, projectId: link.projectId });
+    this.editForm.setValue({ title: link.title, url: link.url, type: link.type, projectId: link.projectId, isPublic: link.isPublic ?? false });
   }
 
   cancelEdit() { this.editingId.set(null); }
 
   saveEdit(id: number) {
-    const { title, url, type, projectId } = this.editForm.value;
+    const { title, url, type, projectId, isPublic } = this.editForm.value;
     const original = this.links().find(l => l.id === id);
     this.service.update(id, {
       title: title!, url: url!, type: type as LinkType, projectId: projectId ?? null,
+      isPublic: isPublic ?? false,
       previewTitle: original?.previewTitle ?? null,
       previewDescription: original?.previewDescription ?? null,
       previewImage: original?.previewImage ?? null,
@@ -406,7 +436,7 @@ export class LinksComponent implements OnInit {
       next: () => {
         const project = this.projects().find(p => p.id === projectId);
         this.links.update(list => list.map(l => l.id === id
-          ? { ...l, title: title!, url: url!, type: type as LinkType, projectId: projectId ?? null, projectName: project?.name ?? null }
+          ? { ...l, title: title!, url: url!, type: type as LinkType, projectId: projectId ?? null, projectName: project?.name ?? null, isPublic: isPublic ?? false }
           : l
         ));
         this.editingId.set(null);

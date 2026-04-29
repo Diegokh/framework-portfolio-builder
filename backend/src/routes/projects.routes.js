@@ -3,6 +3,45 @@ const router = express.Router();
 const pool = require('../db/connection');
 const authMiddleware = require('../middleware/auth.middleware');
 
+// GET /api/projects/public/:userId — Proyectos publicados de un usuario (sin auth)
+router.get('/public/:userId', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      `SELECT p.id, p.name, p.description, p.repoUrl, p.liveUrl, p.status,
+              p.startDate, p.endDate, p.coverStyle, p.coverIcon,
+              c.name AS categoryName, c.color AS categoryColor,
+              COUNT(DISTINCT pt.id) AS technologiesCount
+       FROM projects p
+       LEFT JOIN categories c ON c.id = p.categoryId
+       LEFT JOIN project_technologies pt ON pt.projectId = p.id
+       WHERE p.userId = ? AND p.status IN ('published', 'in_progress')
+       GROUP BY p.id
+       ORDER BY p.createdAt DESC`,
+      [req.params.userId]
+    );
+    res.json({ success: true, data: rows });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/projects/public/:userId/:projectId/screenshots — Screenshots públicas de un proyecto
+router.get('/public/:userId/:projectId/screenshots', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      `SELECT s.id, s.imageUrl, s.caption, s.\`order\`
+       FROM screenshots s
+       INNER JOIN projects p ON p.id = s.projectId
+       WHERE s.projectId = ? AND p.userId = ? AND p.status IN ('published', 'in_progress')
+       ORDER BY s.\`order\` ASC`,
+      [req.params.projectId, req.params.userId]
+    );
+    res.json({ success: true, data: rows });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // GET /api/projects — Listar todos los proyectos del usuario
 router.get('/', authMiddleware, async (req, res) => {
   try {

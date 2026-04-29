@@ -6,6 +6,7 @@ export interface Profile {
   linkedin: string;
   website: string;
   skills: string;
+  cvUrl?: string;
   updatedAt: string;
 }
 

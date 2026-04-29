@@ -18,11 +18,15 @@ export class LinksService {
     );
   }
 
-  create(data: { title: string; url: string; type: LinkType; projectId?: number | null; previewTitle?: string | null; previewDescription?: string | null; previewImage?: string | null }) {
+  getPublic(userId: number) {
+    return this.http.get<LinksResponse>(`${this.url}/public/${userId}`);
+  }
+
+  create(data: { title: string; url: string; type: LinkType; projectId?: number | null; isPublic?: boolean; previewTitle?: string | null; previewDescription?: string | null; previewImage?: string | null }) {
     return this.http.post<CreateLinkResponse>(this.url, data);
   }
 
-  update(id: number, data: { title: string; url: string; type: LinkType; projectId?: number | null; previewTitle?: string | null; previewDescription?: string | null; previewImage?: string | null }) {
+  update(id: number, data: { title: string; url: string; type: LinkType; projectId?: number | null; isPublic?: boolean; previewTitle?: string | null; previewDescription?: string | null; previewImage?: string | null }) {
     return this.http.put<{ success: boolean }>(`${this.url}/${id}`, data);
   }
 

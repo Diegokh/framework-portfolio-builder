@@ -17,4 +17,11 @@ export class App {
   logout() {
     this.auth.logout();
   }
+
+  openPublicView() {
+    const userId = this.auth.currentUser()?.id;
+    if (userId) {
+      this.router.navigate(['/profiles', userId]);
+    }
+  }
 }

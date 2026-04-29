@@ -14,6 +14,16 @@ export const routes: Routes = [
       import('./features/auth/register/register.component').then(m => m.RegisterComponent),
   },
   {
+    path: 'profiles/:userId',
+    loadComponent: () =>
+      import('./features/profile/public-profile/public-profile.component').then(m => m.PublicProfileComponent),
+  },
+  {
+    path: 'users',
+    loadComponent: () =>
+      import('./features/users/users-directory/users-directory.component').then(m => m.UserDirectoryComponent),
+  },
+  {
     path: 'dashboard',
     canActivate: [authGuard],
     loadComponent: () =>
