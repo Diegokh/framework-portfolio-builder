@@ -1,0 +1,5 @@
+{
+  "installCommand": "npm install --include=dev",
+  "buildCommand": "ng build",
+  "outputDirectory": "dist/framework-portfolio-builder/browser"
+}
