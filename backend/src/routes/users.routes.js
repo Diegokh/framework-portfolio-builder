@@ -37,7 +37,7 @@ router.get('/', async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const offset = (page - 1) * limit;
 
-    const [rows] = await pool.execute(
+    const [rows] = await pool.query(
       `SELECT u.id, u.name, u.email, u.createdAt,
               p.bio, p.github, p.linkedin, p.website, p.skills,
               COUNT(pr.id) as projectsCount
@@ -46,8 +46,7 @@ router.get('/', async (req, res) => {
        LEFT JOIN projects pr ON u.id = pr.userId AND pr.status = 'published'
        GROUP BY u.id
        ORDER BY u.createdAt DESC
-       LIMIT ? OFFSET ?`,
-      [limit, offset]
+       LIMIT ${limit} OFFSET ${offset}`
     );
 
     const [countResult] = await pool.execute('SELECT COUNT(*) as total FROM users');
