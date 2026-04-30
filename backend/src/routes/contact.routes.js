@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/connection');
 const authMiddleware = require('../middleware/auth.middleware');
-const { sendContactNotification } = require('../services/mailer');
 
 // POST /api/contact/send/:userId — público, cualquiera puede enviar un mensaje
 router.post('/send/:userId', async (req, res) => {
@@ -11,7 +10,7 @@ router.post('/send/:userId', async (req, res) => {
     if (!fromName || !fromEmail || !body)
       return res.status(400).json({ success: false, message: 'Todos los campos son obligatorios' });
 
-    const [[user]] = await pool.execute('SELECT id, email FROM users WHERE id = ?', [req.params.userId]);
+    const [[user]] = await pool.execute('SELECT id FROM users WHERE id = ?', [req.params.userId]);
     if (!user)
       return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
 
@@ -19,11 +18,6 @@ router.post('/send/:userId', async (req, res) => {
       'INSERT INTO messages (userId, fromName, fromEmail, body) VALUES (?, ?, ?, ?)',
       [req.params.userId, fromName.trim(), fromEmail.trim(), body.trim()]
     );
-
-    // Notificación por email al propietario (no bloqueante)
-    sendContactNotification(user.email, fromName.trim(), fromEmail.trim(), body.trim())
-      .catch(err => console.error('Error enviando notificación de contacto:', err.message));
-
     res.status(201).json({ success: true, message: 'Mensaje enviado' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

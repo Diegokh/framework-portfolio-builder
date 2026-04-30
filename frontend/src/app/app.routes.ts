@@ -14,11 +14,6 @@ export const routes: Routes = [
       import('./features/auth/register/register.component').then(m => m.RegisterComponent),
   },
   {
-    path: 'verify-email',
-    loadComponent: () =>
-      import('./features/auth/verify-email/verify-email.component').then(m => m.VerifyEmailComponent),
-  },
-  {
     path: 'profiles/:userId',
     loadComponent: () =>
       import('./features/profile/public-profile/public-profile.component').then(m => m.PublicProfileComponent),

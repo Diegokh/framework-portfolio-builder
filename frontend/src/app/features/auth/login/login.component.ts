@@ -107,13 +107,7 @@ export class LoginComponent {
     const { email, password } = this.form.value;
     this.auth.login(email!, password!).subscribe({
       next: () => this.router.navigate(['/projects']),
-      error: (err) => {
-        if (err.status === 403) {
-          this.errorMsg = err.error?.message || 'Debes verificar tu email antes de iniciar sesión.';
-        } else {
-          this.errorMsg = 'Email o contraseña incorrectos';
-        }
-      },
+      error: () => (this.errorMsg = 'Email o contraseña incorrectos'),
     });
   }
 }
