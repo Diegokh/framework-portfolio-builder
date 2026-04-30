@@ -7,7 +7,7 @@ const app = express();
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 const allowedOrigins = new Set(
-  [process.env.FRONTEND_URL].filter(Boolean)
+  (process.env.FRONTEND_URL || '').split(',').map(s => s.trim()).filter(Boolean)
 );
 
 const localhostPattern = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
