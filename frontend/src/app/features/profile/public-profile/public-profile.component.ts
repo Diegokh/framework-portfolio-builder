@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { FormsModule } from '@angular/forms';
 import { ProfileService } from '../../../core/services/profile.service';
 import { Profile } from '../../../core/models/profile.model';
 import { Project } from '../../../core/models/project.model';
@@ -17,7 +18,7 @@ interface Screenshot { id: number; imageUrl: string; caption: string; order: num
 @Component({
   selector: 'app-public-profile',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatDividerModule, MatProgressSpinnerModule],
+  imports: [CommonModule, MatIconModule, MatButtonModule, MatDividerModule, MatProgressSpinnerModule, FormsModule],
   template: `
     <div class="page">
 
@@ -91,6 +92,34 @@ interface Screenshot { id: number; imageUrl: string; caption: string; order: num
                 </a>
               </div>
             </div>
+          </div>
+
+          <!-- Formulario de contacto -->
+          <div class="contact-section">
+            <div class="block-title"><mat-icon>mail</mat-icon> Enviar mensaje</div>
+
+            <div *ngIf="msgSent()" class="msg-success">
+              <mat-icon>check_circle</mat-icon>
+              ¡Mensaje enviado correctamente!
+            </div>
+
+            <form *ngIf="!msgSent()" class="msg-form" (ngSubmit)="sendMessage()">
+              <div class="msg-row">
+                <input [(ngModel)]="msgName" name="msgName" placeholder="Tu nombre *"
+                       class="msg-input" required />
+                <input [(ngModel)]="msgEmail" name="msgEmail" placeholder="Tu email *"
+                       type="email" class="msg-input" required />
+              </div>
+              <textarea [(ngModel)]="msgBody" name="msgBody" placeholder="Tu mensaje *"
+                        class="msg-input msg-textarea" rows="4" required></textarea>
+              <div class="msg-footer">
+                <span *ngIf="msgError()" class="msg-error">{{ msgError() }}</span>
+                <button type="submit" class="msg-btn" [disabled]="msgSending()">
+                  <mat-icon>send</mat-icon>
+                  {{ msgSending() ? 'Enviando...' : 'Enviar mensaje' }}
+                </button>
+              </div>
+            </form>
           </div>
 
           <button class="back-btn" (click)="goBack()">
@@ -278,6 +307,35 @@ interface Screenshot { id: number; imageUrl: string; caption: string; order: num
       text-decoration: none;
     }
     .cv-btn mat-icon { font-size: 16px; width: 16px; height: 16px; }
+
+    /* Contacto */
+    .contact-section { padding: 20px 28px; border-top: 1px solid var(--app-border, #2a2d3a); }
+    .msg-form { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+    .msg-row { display: flex; gap: 10px; }
+    .msg-input {
+      width: 100%; padding: 10px 14px; border-radius: 8px; font-size: 14px;
+      background: var(--app-hover, #252836); border: 1px solid var(--app-border, #2a2d3a);
+      color: var(--app-text-primary, #e2e8f0); outline: none; transition: border-color .15s;
+      box-sizing: border-box;
+    }
+    .msg-input:focus { border-color: #667eea; }
+    .msg-input::placeholder { color: var(--app-text-muted, #64748b); }
+    .msg-textarea { resize: vertical; min-height: 90px; font-family: inherit; }
+    .msg-footer { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+    .msg-error { font-size: 13px; color: #ff6b6b; }
+    .msg-btn {
+      display: flex; align-items: center; gap: 6px; padding: 9px 20px;
+      border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600;
+      background: linear-gradient(135deg, #667eea, #764ba2); color: white;
+      transition: opacity .15s;
+    }
+    .msg-btn:disabled { opacity: .6; cursor: not-allowed; }
+    .msg-btn mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    .msg-success {
+      display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+      border-radius: 8px; background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3);
+      color: #22c55e; font-size: 14px; font-weight: 500; margin-top: 12px;
+    }
 
     /* Links públicos */
     .pub-links-list { display: flex; flex-direction: column; gap: 8px; }
@@ -496,6 +554,34 @@ export class PublicProfileComponent implements OnInit {
         next: (r) => { this.projects.set(r.data); this.loadingProjects.set(false); },
         error: () => this.loadingProjects.set(false),
       });
+  }
+
+  // Mensaje
+  msgName = '';
+  msgEmail = '';
+  msgBody = '';
+  msgSending = signal(false);
+  msgSent = signal(false);
+  msgError = signal<string | null>(null);
+
+  sendMessage() {
+    if (!this.msgName || !this.msgEmail || !this.msgBody) return;
+    this.msgSending.set(true);
+    this.msgError.set(null);
+    this.http.post(`${environment.apiUrl}/contact/send/${this.userId}`, {
+      fromName: this.msgName,
+      fromEmail: this.msgEmail,
+      body: this.msgBody,
+    }).subscribe({
+      next: () => {
+        this.msgSent.set(true);
+        this.msgSending.set(false);
+      },
+      error: (e) => {
+        this.msgError.set(e.error?.message ?? 'Error al enviar el mensaje');
+        this.msgSending.set(false);
+      },
+    });
   }
 
   private loadPublicLinks(userId: number) {
