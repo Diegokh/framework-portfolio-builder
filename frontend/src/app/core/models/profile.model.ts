@@ -7,6 +7,8 @@ export interface Profile {
   website: string;
   skills: string;
   cvUrl?: string;
+  avatarUrl?: string;
+  coverUrl?: string;
   updatedAt: string;
 }
 

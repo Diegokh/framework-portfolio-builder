@@ -29,9 +29,22 @@ interface Screenshot { id: number; imageUrl: string; caption: string; order: num
 
         <!-- PERFIL -->
         <div class="profile-card">
-          <div class="profile-header">
-            <div class="avatar"><mat-icon>person</mat-icon></div>
-            <div>
+
+          <!-- Portada -->
+          <div class="cover-area"
+               [style.backgroundImage]="profile()?.coverUrl ? 'url(' + apiBase + profile()!.coverUrl + ')' : null">
+            <div class="cover-overlay"></div>
+          </div>
+
+          <!-- Zona bajo la portada: avatar flotante + nombre -->
+          <div class="below-cover">
+            <div class="avatar-float">
+              <div class="avatar"
+                   [style.backgroundImage]="profile()?.avatarUrl ? 'url(' + apiBase + profile()!.avatarUrl + ')' : null">
+                <mat-icon *ngIf="!profile()?.avatarUrl">person</mat-icon>
+              </div>
+            </div>
+            <div class="header-info">
               <h1>Perfil Profesional</h1>
               <span class="updated" *ngIf="profile()?.updatedAt">
                 Actualizado {{ profile()?.updatedAt | date:'mediumDate' }}
@@ -78,13 +91,22 @@ interface Screenshot { id: number; imageUrl: string; caption: string; order: num
               <div class="block-title"><mat-icon>link</mat-icon> Links</div>
               <div class="pub-links-list">
                 <a *ngFor="let l of publicLinks()" [href]="l.url" target="_blank" rel="noopener" class="pub-link-item">
-                  <div class="pub-link-left">
-                    <mat-icon class="pub-link-icon">{{ linkIcon(l.type) }}</mat-icon>
-                    <div class="pub-link-text">
-                      <span class="pub-link-title">{{ l.previewTitle || l.title }}</span>
-                      <span class="pub-link-url">{{ l.url }}</span>
-                    </div>
+                  <!-- Imagen de preview -->
+                  <div class="pub-link-img" *ngIf="l.previewImage; else noImg">
+                    <img [src]="l.previewImage" [alt]="l.previewTitle || l.title" />
                   </div>
+                  <ng-template #noImg>
+                    <div class="pub-link-icon-box">
+                      <mat-icon>{{ linkIcon(l.type) }}</mat-icon>
+                    </div>
+                  </ng-template>
+                  <!-- Texto -->
+                  <div class="pub-link-text">
+                    <span class="pub-link-title">{{ l.previewTitle || l.title }}</span>
+                    <span class="pub-link-desc" *ngIf="l.previewDescription">{{ l.previewDescription }}</span>
+                    <span class="pub-link-url">{{ l.url }}</span>
+                  </div>
+                  <!-- Derecha -->
                   <div class="pub-link-right">
                     <span *ngIf="l.projectName" class="pub-link-project">{{ l.projectName }}</span>
                     <mat-icon class="pub-link-arrow">open_in_new</mat-icon>
@@ -246,28 +268,56 @@ interface Screenshot { id: number; imageUrl: string; caption: string; order: num
 
     .center-spin { display:flex; justify-content:center; align-items:center; min-height:60vh; }
 
-    .layout { max-width: 960px; margin: 0 auto; padding: 32px 20px; display: flex; flex-direction: column; gap: 32px; }
+    .layout { max-width: 860px; margin: 0 auto; padding: 32px 20px; display: flex; flex-direction: column; gap: 28px; }
 
     /* ── PERFIL ── */
     .profile-card {
       background: var(--app-surface, #1a1d27);
       border: 1px solid var(--app-border, #2a2d3a);
-      border-radius: 16px;
+      border-radius: 20px;
       overflow: hidden;
     }
-    .profile-header {
-      display: flex; align-items: center; gap: 20px;
-      padding: 28px 28px 20px;
+
+    /* Portada */
+    .cover-area {
+      height: 180px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 60%, #f64f59 100%);
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+    .cover-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,.4) 100%);
+      pointer-events: none;
+    }
+
+    /* Zona bajo la portada: contiene el avatar flotante y el nombre */
+    .below-cover {
+      position: relative;
+      padding: 56px 28px 20px;   /* top = 56px deja espacio al avatar */
       border-bottom: 1px solid var(--app-border, #2a2d3a);
     }
-    .avatar {
-      width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0;
-      background: linear-gradient(135deg,#667eea,#764ba2);
-      display: flex; align-items: center; justify-content: center;
-      color: white; font-size: 36px;
+
+    /* Avatar: sale 48px hacia arriba desde .below-cover */
+    .avatar-float {
+      position: absolute;
+      top: -48px;
+      left: 28px;
     }
-    .avatar mat-icon { font-size: 36px; width: 36px; height: 36px; }
-    .profile-header h1 { margin: 0; font-size: 22px; font-weight: 700; color: var(--app-text-primary, #e2e8f0); }
+    .avatar {
+      width: 96px; height: 96px; border-radius: 50%;
+      background: linear-gradient(135deg,#667eea,#764ba2);
+      background-size: cover; background-position: center;
+      border: 4px solid var(--app-surface, #1a1d27);
+      display: flex; align-items: center; justify-content: center;
+      color: white; box-shadow: 0 4px 20px rgba(0,0,0,.5);
+    }
+    .avatar mat-icon { font-size: 44px; width: 44px; height: 44px; }
+
+    /* Nombre / fecha */
+    .header-info {}
+    .header-info h1 { margin: 0 0 3px; font-size: 22px; font-weight: 700; color: var(--app-text-primary, #e2e8f0); }
     .updated { font-size: 12px; color: var(--app-text-muted, #64748b); }
 
     .profile-body { padding: 20px 28px; display: flex; flex-direction: column; gap: 20px; }
@@ -338,22 +388,45 @@ interface Screenshot { id: number; imageUrl: string; caption: string; order: num
     }
 
     /* Links públicos */
-    .pub-links-list { display: flex; flex-direction: column; gap: 8px; }
+    .pub-links-list { display: flex; flex-direction: column; gap: 10px; }
     .pub-link-item {
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      padding: 10px 14px; border-radius: 10px; text-decoration: none;
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 14px; border-radius: 12px; text-decoration: none;
       background: var(--app-hover, #252836);
       border: 1px solid var(--app-border, #2a2d3a);
-      transition: border-color .15s, background .15s;
+      transition: border-color .15s, background .15s, transform .15s;
+      overflow: hidden;
     }
-    .pub-link-item:hover { border-color: #667eea; background: rgba(102,126,234,.06); }
-    .pub-link-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
-    .pub-link-icon { font-size: 18px; width: 18px; height: 18px; color: #667eea; flex-shrink: 0; }
-    .pub-link-text { display: flex; flex-direction: column; min-width: 0; }
+    .pub-link-item:hover {
+      border-color: #667eea;
+      background: rgba(102,126,234,.07);
+      transform: translateY(-1px);
+    }
+
+    /* Imagen preview */
+    .pub-link-img {
+      width: 72px; height: 52px; flex-shrink: 0;
+      border-radius: 8px; overflow: hidden;
+      background: var(--app-border, #2a2d3a);
+    }
+    .pub-link-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* Ícono fallback */
+    .pub-link-icon-box {
+      width: 44px; height: 44px; flex-shrink: 0; border-radius: 10px;
+      background: linear-gradient(135deg, rgba(102,126,234,.2), rgba(118,75,162,.2));
+      border: 1px solid rgba(102,126,234,.25);
+      display: flex; align-items: center; justify-content: center;
+      color: #667eea;
+    }
+    .pub-link-icon-box mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+    .pub-link-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
     .pub-link-title { font-size: 13px; font-weight: 600; color: var(--app-text-primary, #e2e8f0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pub-link-desc { font-size: 12px; color: var(--app-text-muted, #94a3b8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .pub-link-url { font-size: 11px; color: var(--app-text-muted, #64748b); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .pub-link-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-    .pub-link-project { font-size: 10px; padding: 2px 7px; border-radius: 10px; background: var(--app-border, #2a2d3a); color: var(--app-text-muted, #94a3b8); }
+    .pub-link-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto; }
+    .pub-link-project { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: var(--app-border, #2a2d3a); color: var(--app-text-muted, #94a3b8); }
     .pub-link-arrow { font-size: 14px; width: 14px; height: 14px; color: var(--app-text-muted, #64748b); }
 
     .back-btn {

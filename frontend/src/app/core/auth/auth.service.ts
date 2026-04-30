@@ -25,8 +25,14 @@ export class AuthService {
   }
 
   register(name: string, email: string, password: string) {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, { name, email, password }).pipe(
-      tap(res => this.handleAuthSuccess(res))
+    return this.http.post<{ success: boolean; message: string }>(
+      `${this.apiUrl}/auth/register`, { name, email, password }
+    );
+  }
+
+  verifyEmail(token: string) {
+    return this.http.get<{ success: boolean; message: string }>(
+      `${this.apiUrl}/auth/verify/${token}`
     );
   }
 

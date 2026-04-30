@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const pool = require('../db/connection');
 const authMiddleware = require('../middleware/auth.middleware');
+const { sendVerificationEmail } = require('../services/mailer');
 
 // ---------- Validaciones ----------
 const validateRegister = (req, res, next) => {
@@ -46,27 +48,46 @@ router.post('/register', validateRegister, async (req, res) => {
       return res.status(400).json({ success: false, message: 'El email ya está registrado' });
     }
 
-    // Hash de la contraseña
+    // Hash de la contraseña + token de verificación
     const hashedPassword = await bcrypt.hash(password, 12);
+    const verificationToken = crypto.randomBytes(32).toString('hex');
 
-    // Insertar usuario
+    // Insertar usuario sin verificar
     const [result] = await pool.execute(
-      'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-      [name, email, hashedPassword]
+      'INSERT INTO users (name, email, password, isVerified, verificationToken) VALUES (?, ?, ?, 0, ?)',
+      [name, email, hashedPassword, verificationToken]
     );
 
-    // Generar JWT
-    const token = jwt.sign(
-      { id: result.insertId, email },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+    // Enviar email de verificación (no bloqueante)
+    sendVerificationEmail(email, verificationToken).catch(err =>
+      console.error('Error enviando email de verificación:', err.message)
     );
 
     res.status(201).json({
       success: true,
-      token,
-      user: { id: result.insertId, name, email },
+      message: 'Cuenta creada. Revisa tu email para verificarla antes de iniciar sesión.',
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ---------- GET /api/auth/verify/:token ----------
+router.get('/verify/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const [rows] = await pool.execute(
+      'SELECT id FROM users WHERE verificationToken = ? AND isVerified = 0',
+      [token]
+    );
+    if (rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'Token inválido o ya utilizado' });
+    }
+    await pool.execute(
+      'UPDATE users SET isVerified = 1, verificationToken = NULL WHERE id = ?',
+      [rows[0].id]
+    );
+    res.json({ success: true, message: 'Cuenta verificada correctamente' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -92,6 +113,11 @@ router.post('/login', validateLogin, async (req, res) => {
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
       return res.status(401).json({ success: false, message: 'Credenciales incorrectas' });
+    }
+
+    // Comprobar verificación de email
+    if (!user.isVerified) {
+      return res.status(403).json({ success: false, message: 'Debes verificar tu email antes de iniciar sesión. Revisa tu bandeja de entrada.' });
     }
 
     // Generar JWT

@@ -29,4 +29,24 @@ export class ProfileService {
   deleteCv() {
     return this.http.delete<{ success: boolean; message: string }>(`${this.apiUrl}/cv`);
   }
+
+  uploadAvatar(file: File) {
+    const form = new FormData();
+    form.append('avatar', file);
+    return this.http.post<{ success: boolean; url: string }>(`${this.apiUrl}/avatar`, form);
+  }
+
+  deleteAvatar() {
+    return this.http.delete<{ success: boolean }>(`${this.apiUrl}/avatar`);
+  }
+
+  uploadCover(file: File) {
+    const form = new FormData();
+    form.append('cover', file);
+    return this.http.post<{ success: boolean; url: string }>(`${this.apiUrl}/cover`, form);
+  }
+
+  deleteCover() {
+    return this.http.delete<{ success: boolean }>(`${this.apiUrl}/cover`);
+  }
 }

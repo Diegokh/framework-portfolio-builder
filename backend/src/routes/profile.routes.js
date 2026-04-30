@@ -30,11 +30,71 @@ const uploadCv = multer({
   },
 });
 
+const imageStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadsDir),
+  filename: (req, file, cb) => {
+    const prefix = req.path.includes('cover') ? 'cover' : 'avatar';
+    const unique = `${prefix}-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+    cb(null, `${unique}${path.extname(file.originalname)}`);
+  },
+});
+
+const uploadImage = multer({
+  storage: imageStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png|gif|webp/;
+    if (allowed.test(path.extname(file.originalname).toLowerCase())) {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten imágenes (jpeg, png, gif, webp)'));
+    }
+  },
+});
+
+const updateProfileImage = (field) => async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: 'Imagen requerida' });
+
+    const [rows] = await pool.execute(`SELECT ${field} FROM profile WHERE userId = ?`, [req.user.id]);
+    if (rows[0]?.[field]) {
+      const oldPath = path.join(__dirname, '../..', rows[0][field]);
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+
+    const url = `/uploads/${req.file.filename}`;
+    const [existing] = await pool.execute('SELECT id FROM profile WHERE userId = ?', [req.user.id]);
+
+    if (existing.length > 0) {
+      await pool.execute(`UPDATE profile SET ${field} = ? WHERE userId = ?`, [url, req.user.id]);
+    } else {
+      await pool.execute(`INSERT INTO profile (userId, ${field}) VALUES (?, ?)`, [req.user.id, url]);
+    }
+
+    res.json({ success: true, url });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const deleteProfileImage = (field) => async (req, res) => {
+  try {
+    const [rows] = await pool.execute(`SELECT ${field} FROM profile WHERE userId = ?`, [req.user.id]);
+    if (!rows[0]?.[field]) return res.status(404).json({ success: false, message: 'No hay imagen' });
+    const filePath = path.join(__dirname, '../..', rows[0][field]);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    await pool.execute(`UPDATE profile SET ${field} = NULL WHERE userId = ?`, [req.user.id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // GET /api/profiles/public/:userId (PÚBLICO)
 router.get('/public/:userId', async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      'SELECT id, userId, bio, github, linkedin, website, skills, cvUrl, updatedAt FROM profile WHERE userId = ?',
+      'SELECT id, userId, bio, github, linkedin, website, skills, cvUrl, avatarUrl, coverUrl, updatedAt FROM profile WHERE userId = ?',
       [req.params.userId]
     );
     res.json({ success: true, data: rows[0] || null });
@@ -42,6 +102,16 @@ router.get('/public/:userId', async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+// POST /api/profile/avatar
+router.post('/avatar', authMiddleware, uploadImage.single('avatar'), updateProfileImage('avatarUrl'));
+// DELETE /api/profile/avatar
+router.delete('/avatar', authMiddleware, deleteProfileImage('avatarUrl'));
+
+// POST /api/profile/cover
+router.post('/cover', authMiddleware, uploadImage.single('cover'), updateProfileImage('coverUrl'));
+// DELETE /api/profile/cover
+router.delete('/cover', authMiddleware, deleteProfileImage('coverUrl'));
 
 // GET /api/profile
 router.get('/', authMiddleware, async (req, res) => {
