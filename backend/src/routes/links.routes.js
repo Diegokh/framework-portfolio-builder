@@ -21,15 +21,33 @@ router.get('/public/:userId', async (req, res) => {
   }
 });
 
+const PRIVATE_IP = /^(localhost$|127\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.|169\.254\.|::1$|fc00:|fe80:)/i;
+
 // GET /api/links/preview?url=...
 router.get('/preview', authMiddleware, async (req, res) => {
   const { url } = req.query;
   if (!url) return res.status(400).json({ success: false, message: 'URL requerida' });
 
+  let parsed;
   try {
-    const response = await fetch(url, {
+    parsed = new URL(url);
+  } catch {
+    return res.status(400).json({ success: false, message: 'URL inválida' });
+  }
+
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    return res.status(400).json({ success: false, message: 'Solo se permiten URLs http/https' });
+  }
+
+  if (PRIVATE_IP.test(parsed.hostname)) {
+    return res.status(403).json({ success: false, message: 'URL no permitida' });
+  }
+
+  try {
+    const response = await fetch(parsed.toString(), {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PortfolioBot/1.0)' },
       signal: AbortSignal.timeout(8000),
+      redirect: 'follow',
     });
     const html = await response.text();
 
